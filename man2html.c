@@ -433,7 +433,7 @@ int unfont()
 	fstk[0] = 0;
 }
 
-output(bv *txt)
+void output(bv *txt)
 {
 	char *ptr;
 	macro_t *e;
@@ -545,7 +545,7 @@ void oneline(bv *txt)
 
 #define CMD "/usr/bin/gunzip < %s"
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	char *evpath;
 	bv txt = {0, inbuf};
