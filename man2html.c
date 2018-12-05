@@ -31,7 +31,7 @@ typedef struct macro_s {
 macro_f title, section, bold, boldital, boldrom, ital, italbold, italrom;
 macro_f rombold, romital, smbold, small;
 macro_f deftab, hangpar, inpar, newpar, pardist, undent, indent, subsec;
-macro_f tagpar, comment, eol, ftfont;
+macro_f tagpar, comment, eol, ftfont, indent2;
 macro_f fixw, boldfixw, fixwbold, fixwital, fixwrom, italfixw, romfixw;
 macro_f nofmt, dofmt, errpunct, noop, table, source;
 
@@ -39,6 +39,7 @@ macro_f nofmt, dofmt, errpunct, noop, table, source;
 #define IS_UL	2
 #define IS_IL	3
 #define IS_NL	4
+#define IS_NF	5
 
 int indents[16];
 int curind;
@@ -91,6 +92,7 @@ macro_t macs[] = {
 	{ BVC("SC"), fixwrom },
 	{ BVC("br"), eol },
 	{ BVC("sp"), eol },
+	{ BVC("in"), indent2 },
 	{ BVC("nf"), nofmt },
 	{ BVC("fi"), dofmt },
 	{ BVC("ft"), ftfont },
@@ -100,6 +102,7 @@ macro_t macs[] = {
 	{ BVC("ds"), noop },
 	{ BVC("hy"), noop },	/* hyphenation */
 	{ BVC("\\\""), comment },
+	{ BVC("lf"), comment },	/* set input line number to N and filename to file */
 	{ {0,NULL}, NULL }
 };
 
@@ -533,7 +536,8 @@ void oneline(bv *txt)
 		} else
 		{
 	/*		unnest(); */
-			printf("<p>"); /* SIND? */
+			if (indents[curind] != IS_NF)
+				printf("<p>"); /* SIND? */
 		}
 		putchar('\n');
 	}
@@ -682,7 +686,7 @@ int title(char *in) {
 int wraptext(char *in, char *beg, char *end)
 {
 	int wc = parsewords(in);
-	printf(beg);
+	fputs(beg, stdout);
 	wrap_nl = 1;
 	if (wc)
 	{
@@ -879,11 +883,15 @@ int hangpar(char *in) {
 }
 
 int nofmt(char *in) {
+	curind++;
+	indents[curind] = IS_NF;
 	printf("<pre>\n");
 	return 0;
 }
 
 int dofmt(char *in) {
+	if (indents[curind] == IS_NF)
+		curind--;
 	printf("</pre>\n");
 	return 0;
 }
@@ -963,6 +971,14 @@ int indent(char *in) {
 		id = IS_NL;
 	curind++;
 	indents[curind] = id;
+	return 0;
+}
+
+int indent2(char *in) {
+	dofmt(in);
+	curind++;
+	indents[curind] = IS_UL;
+	printf("<ul>\n");
 	return 0;
 }
 
